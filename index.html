@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1C1B19">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Le mie frasi</title>
+<style>
+  :root {
+    --bg: #1C1B19;
+    --bg-raised: #242220;
+    --ink: #E8E3D8;
+    --ink-dim: #A69C8A;
+    --rule: #3A362F;
+    --fixed: #8A6E4B;
+    --fixed-bg: #2A241C;
+    --daily: #5C7566;
+    --daily-bg: #1E2620;
+    --danger: #A5544A;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .ui {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  #app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 32px 20px 100px;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  header h1 {
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .date {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 12px;
+    color: var(--ink-dim);
+    text-transform: lowercase;
+  }
+
+  .section-label {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin: 36px 0 12px 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .dot.fixed-dot { background: var(--fixed); }
+  .dot.daily-dot { background: var(--daily); }
+
+  .card {
+    border: 1px solid var(--rule);
+    border-left: 3px solid transparent;
+    padding: 22px 20px;
+    margin-bottom: 12px;
+    border-radius: 2px;
+    background: var(--bg-raised);
+    position: relative;
+  }
+
+  .card.fixed { border-left-color: var(--fixed); background: var(--fixed-bg); }
+  .card.daily { border-left-color: var(--daily); background: var(--daily-bg); }
+
+  .card p {
+    font-size: 19px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .progress {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 12px;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--rule);
+    margin: 0 12px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--daily);
+  }
+
+  nav.tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-raised);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  nav.tabs button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--ink-dim);
+    padding: 14px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  nav.tabs button.active {
+    color: var(--ink);
+    border-top: 2px solid var(--fixed);
+  }
+
+  .manage {
+    display: none;
+  }
+  .manage.visible { display: block; }
+  #dailyView.hidden { display: none; }
+
+  .group {
+    margin-bottom: 32px;
+  }
+
+  .group-title {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-bottom: 10px;
+  }
+
+  .edit-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+
+  .edit-row textarea {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    font-family: Georgia, serif;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: 2px;
+    resize: vertical;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+
+  .edit-row textarea:focus {
+    outline: none;
+    border-color: var(--fixed);
+  }
+
+  .icon-btn {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--ink-dim);
+    width: 36px;
+    height: 36px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:active { background: var(--rule); }
+
+  .add-btn {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    width: 100%;
+    background: none;
+    border: 1px dashed var(--rule);
+    color: var(--ink-dim);
+    padding: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .move-hint {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-top: -2px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--ink-dim);
+    font-size: 14px;
+    padding: 60px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .save-toast {
+    position: fixed;
+    bottom: 76px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+  }
+  .save-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <h1>Le mie frasi</h1>
+    <span class="date ui" id="todayLabel"></span>
+  </header>
+
+  <div id="dailyView">
+    <div id="dailyContent"></div>
+  </div>
+
+  <div id="manageView" class="manage">
+    <div class="group">
+      <div class="group-title">Fisse — sempre presenti</div>
+      <div id="fixedList"></div>
+      <button class="add-btn" onclick="addPhrase('fixed')">+ aggiungi frase fissa</button>
+    </div>
+    <div class="group">
+      <div class="group-title">A rotazione — 3 al giorno, senza ripetizioni fino a fine giro</div>
+      <div class="move-hint">Il mazzo si mescola di nuovo solo quando tutte sono uscite almeno una volta.</div>
+      <div id="poolList"></div>
+      <button class="add-btn" onclick="addPhrase('pool')">+ aggiungi frase a rotazione</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast ui" id="toast">Salvato</div>
+
+<nav class="tabs">
+  <button id="tabDaily" class="active" onclick="showTab('daily')">Oggi</button>
+  <button id="tabManage" onclick="showTab('manage')">Gestisci frasi</button>
+</nav>
+
+<script>
+const STORAGE_KEY = 'frasi_app_v1';
+
+const DEFAULT_DATA = {
+  fixed: [],
+  pool: [],
+  poolQueue: [],
+  lastDrawDate: null,
+  todaysDraw: []
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_DATA);
+    const parsed = JSON.parse(raw);
+    return Object.assign(structuredClone(DEFAULT_DATA), parsed);
+  } catch (e) {
+    console.error('Errore lettura dati', e);
+    return structuredClone(DEFAULT_DATA);
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    showToast();
+  } catch (e) {
+    console.error('Errore salvataggio', e);
+  }
+}
+
+let toastTimer = null;
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+let data = loadData();
+
+function todayString() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Assicura che ci sia un pescaggio valido per oggi, gestendo il mazzo a rotazione
+function ensureTodaysDraw() {
+  const today = todayString();
+  if (data.lastDrawDate === today && data.todaysDraw.length > 0) {
+    // Filtra eventuali id di frasi ormai cancellate
+    data.todaysDraw = data.todaysDraw.filter(id => data.pool.some(p => p.id === id));
+    if (data.todaysDraw.length > 0) return;
+  }
+
+  // Rimuovi dalla coda eventuali id cancellati
+  data.poolQueue = data.poolQueue.filter(id => data.pool.some(p => p.id === id));
+
+  // Se la coda è vuota o troppo corta, rimescola un nuovo giro con tutte le frasi pool
+  const poolIds = data.pool.map(p => p.id);
+  if (poolIds.length === 0) {
+    data.todaysDraw = [];
+    data.lastDrawDate = today;
+    saveData();
+    return;
+  }
+
+  const needed = Math.min(3, poolIds.length);
+  if (data.poolQueue.length < needed) {
+    // rimescola: aggiungi un nuovo giro mescolato, evitando di duplicare quelle già in coda se possibile
+    const remaining = data.poolQueue;
+    const freshRound = shuffle(poolIds);
+    data.poolQueue = remaining.concat(freshRound);
+  }
+
+  data.todaysDraw = data.poolQueue.splice(0, needed);
+  data.lastDrawDate = today;
+  saveData();
+}
+
+function uid() {
+  return 'p' + Date.now() + Math.random().toString(36).slice(2,7);
+}
+
+function renderDaily() {
+  ensureTodaysDraw();
+  const container = document.getElementById('dailyContent');
+  container.innerHTML = '';
+
+  if (data.fixed.length === 0 && data.pool.length === 0) {
+    container.innerHTML = '<div class="empty">Non hai ancora aggiunto nessuna frase.<br>Vai su "Gestisci frasi" per iniziare.</div>';
+    return;
+  }
+
+  if (data.fixed.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'section-label ui';
+    label.innerHTML = '<span class="dot fixed-dot"></span> Sempre presenti';
+    container.appendChild(label);
+    data.fixed.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card fixed';
+      card.innerHTML = '<p>' + escapeHtml(item.text) + '</p>';
+      container.appendChild(card);
+    });
+  }
+
+  if (data.pool.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'section-label ui';
+    label.innerHTML = '<span class="dot daily-dot"></span> Di oggi';
+    container.appendChild(label);
+
+    const todaysPhrases = data.todaysDraw
+      .map(id => data.pool.find(p => p.id === id))
+      .filter(Boolean);
+
+    todaysPhrases.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card daily';
+      card.innerHTML = '<p>' + escapeHtml(item.text) + '</p>';
+      container.appendChild(card);
+    });
+
+    // barra di avanzamento del giro corrente
+    const seenThisRound = data.pool.length - new Set(data.poolQueue).size;
+    const pct = data.pool.length > 0 ? Math.round((seenThisRound / data.pool.length) * 100) : 0;
+    const progress = document.createElement('div');
+    progress.className = 'progress ui';
+    progress.innerHTML = `
+      <span>giro in corso</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%"></div></div>
+      <span>${Math.min(seenThisRound, data.pool.length)}/${data.pool.length}</span>
+    `;
+    container.appendChild(progress);
+  }
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderManage() {
+  renderList('fixed', 'fixedList');
+  renderList('pool', 'poolList');
+}
+
+function renderList(key, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  data[key].forEach((item) => {
+    const row = document.createElement('div');
+    row.className = 'edit-row';
+    const ta = document.createElement('textarea');
+    ta.value = item.text;
+    ta.rows = 2;
+    ta.addEventListener('input', () => {
+      item.text = ta.value;
+    });
+    ta.addEventListener('blur', () => {
+      saveData();
+      if (key === 'fixed') renderDaily(); else { /* daily draw unaffected by edits */ renderDaily(); }
+    });
+    const del = document.createElement('button');
+    del.className = 'icon-btn';
+    del.textContent = '✕';
+    del.onclick = () => {
+      data[key] = data[key].filter(p => p.id !== item.id);
+      if (key === 'pool') {
+        data.poolQueue = data.poolQueue.filter(id => id !== item.id);
+        data.todaysDraw = data.todaysDraw.filter(id => id !== item.id);
+      }
+      saveData();
+      renderManage();
+      renderDaily();
+    };
+    row.appendChild(ta);
+    row.appendChild(del);
+    container.appendChild(row);
+  });
+}
+
+function addPhrase(key) {
+  data[key].push({ id: uid(), text: '' });
+  saveData();
+  renderManage();
+  // focus sull'ultima textarea aggiunta
+  const container = document.getElementById(key === 'fixed' ? 'fixedList' : 'poolList');
+  const last = container.querySelector('.edit-row:last-child textarea');
+  if (last) last.focus();
+}
+
+function showTab(tab) {
+  document.getElementById('dailyView').classList.toggle('hidden', tab !== 'daily');
+  document.getElementById('manageView').classList.toggle('visible', tab === 'manage');
+  document.getElementById('tabDaily').classList.toggle('active', tab === 'daily');
+  document.getElementById('tabManage').classList.toggle('active', tab === 'manage');
+  if (tab === 'daily') renderDaily();
+  else renderManage();
+}
+
+document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+renderDaily();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((e) => console.error('SW non registrato', e));
+  });
+}
+</script>
+</body>
+</html>
